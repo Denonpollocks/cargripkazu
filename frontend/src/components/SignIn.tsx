@@ -42,7 +42,7 @@ const SignIn = () => {
   return (
     <div className="min-h-screen bg-black pt-24 pb-12 px-4">
       <div className="max-w-md mx-auto bg-zinc-900 rounded-lg p-8">
-        <h1 className="text-3xl font-bold text-gold-500 mb-8 text-center">Sign In</h1>
+        <h1 className="text-3xl font-bold text-gold-500 mb-8 text-center">Sign In now</h1>
         
         {error && (
           <div className="bg-red-500 text-white p-3 rounded mb-4">
