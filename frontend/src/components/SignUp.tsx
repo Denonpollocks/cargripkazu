@@ -24,28 +24,50 @@ const SignUp = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      alert('Passwords do not match!');
+      return;
+    }
+
     try {
-      // Log the form data (replace with actual API call)
-      console.log('Form submitted:', formData);
+      // Make API call to your backend
+      const response = await fetch('http://localhost:3000/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          password: formData.password,
+          phone: formData.phone,
+          country: formData.country,
+          company: formData.company
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Signup failed');
+      }
+
+      const data = await response.json();
 
       if (fromQuotation && quotationData) {
-        // If user came from quotation form, handle both signup and quotation
-        console.log('Submitting quotation:', quotationData);
-        // TODO: Add API call for quotation submission
-        
+        // Handle quotation submission here
+        // Add your quotation API call
         alert('Account created and quotation submitted successfully!');
       } else {
-        // Handle regular signup only
         alert('Account created successfully!');
       }
 
-      // Redirect to home page after successful submission
       navigate('/');
       
     } catch (error) {
-      // Handle any errors during submission
       console.error('Error during submission:', error);
-      alert('An error occurred. Please try again.');
+      alert(error instanceof Error ? error.message : 'An error occurred. Please try again.');
     }
   };
 
