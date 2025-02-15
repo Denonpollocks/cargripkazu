@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #B8860B; color: white; padding: 20px; text-align: center; }
+    .content { padding: 20px; }
+    .tracking-info { background-color: #f9f9f9; padding: 15px; margin: 15px 0; }
+    .footer { text-align: center; padding: 20px; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Shipping Update</h1>
+    </div>
+    <div class="content">
+      <p>Dear {{userName}},</p>
+      <p>There has been an update to your order (ID: {{orderId}}).</p>
+      
+      <div class="tracking-info">
+        <h2>Shipping Details:</h2>
+        <p><strong>Status:</strong> {{status}}</p>
+        <p><strong>Tracking Number:</strong> {{trackingNumber}}</p>
+        <p><strong>Estimated Delivery:</strong> {{estimatedDelivery}}</p>
+      </div>
+
+      <p>You can track your shipment using the tracking number above.</p>
+    </div>
+    <div class="footer">
+      <p>Best regards,<br>Car Grip Team</p>
+    </div>
+  </div>
+</body>
+</html> 

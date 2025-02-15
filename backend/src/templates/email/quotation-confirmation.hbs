@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #B8860B; color: white; padding: 20px; text-align: center; }
+    .content { padding: 20px; }
+    .details { background-color: #f9f9f9; padding: 15px; margin: 15px 0; }
+    .footer { text-align: center; padding: 20px; color: #666; }
+  </style>
+</head>
+<body>
+  <h1>Quotation Request Received</h1>
+  <p>Dear {{userName}},</p>
+  <p>We have received your quotation request (ID: {{quotationId}}) for {{type}}.</p>
+  
+  <h2>Details:</h2>
+  {{#if details}}
+    <ul>
+      {{#each details}}
+        <li><strong>{{@key}}:</strong> {{this}}</li>
+      {{/each}}
+    </ul>
+  {{/if}}
+
+  <p>We will review your request and get back to you shortly.</p>
+  
+  <p>Best regards,<br>Car Grip Team</p>
+</body>
+</html> 

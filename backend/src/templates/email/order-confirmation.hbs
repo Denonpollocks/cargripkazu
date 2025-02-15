@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #B8860B; color: white; padding: 20px; text-align: center; }
+    .content { padding: 20px; }
+    .details { background-color: #f9f9f9; padding: 15px; margin: 15px 0; }
+    .footer { text-align: center; padding: 20px; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Order Confirmation</h1>
+    </div>
+    <div class="content">
+      <p>Dear {{userName}},</p>
+      <p>Thank you for your order (ID: {{orderId}}).</p>
+      
+      <div class="details">
+        <h2>Order Details:</h2>
+        <p><strong>Type:</strong> {{type}}</p>
+        {{#each details}}
+          <p><strong>{{@key}}:</strong> {{this}}</p>
+        {{/each}}
+      </div>
+
+      <div class="details">
+        <h2>Payment Information:</h2>
+        <p><strong>Amount:</strong> {{payment.amount}}</p>
+        <p><strong>Date:</strong> {{payment.dateSubmitted}}</p>
+      </div>
+
+      <p>We will process your order and keep you updated on its status.</p>
+    </div>
+    <div class="footer">
+      <p>Best regards,<br>Car Grip Team</p>
+    </div>
+  </div>
+</body>
+</html> 

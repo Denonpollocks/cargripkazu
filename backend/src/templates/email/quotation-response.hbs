@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #B8860B; color: white; padding: 20px; text-align: center; }
+    .content { padding: 20px; }
+    .price-breakdown { background-color: #f9f9f9; padding: 15px; margin: 15px 0; }
+    .footer { text-align: center; padding: 20px; color: #666; }
+  </style>
+</head>
+<body>
+  <h1>Quotation Response</h1>
+  <p>Dear {{userName}},</p>
+  <p>We have reviewed your quotation request (ID: {{quotationId}}).</p>
+  
+  <h2>Response Details:</h2>
+  <ul>
+    <li><strong>Availability:</strong> {{response.availability}}</li>
+    <li><strong>Estimated Delivery:</strong> {{response.estimatedDelivery}}</li>
+    <li><strong>Additional Notes:</strong> {{response.additionalNotes}}</li>
+  </ul>
+
+  <h3>Price Breakdown:</h3>
+  <ul>
+    <li>Item Cost: {{response.priceBreakdown.itemCost}}</li>
+    <li>Delivery Cost: {{response.priceBreakdown.deliveryCost}}</li>
+    <li>Tax: {{response.priceBreakdown.tax}}</li>
+    <li><strong>Total Cost:</strong> {{response.priceBreakdown.totalCost}}</li>
+  </ul>
+
+  <p>To proceed with your order, please log in to your account and accept the quotation.</p>
+  
+  <p>Best regards,<br>Car Grip Team</p>
+</body>
+</html> 
