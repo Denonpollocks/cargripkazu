@@ -10,6 +10,20 @@ export interface IQuotation extends Document {
     model: string;
     year: string;
     [key: string]: any;
+    country: string;
+    port: string;
+    contactName: string;
+    contactEmail: string;
+    contactPhone: string;
+    message: string;
+    part_image: string; 
+    chassis_number: string;
+    part_number: string;
+    parts_description: string;
+    mileage: string;
+    grade: string;
+    color: string;
+    budget: string;
   };
   response?: {
     availability: string;

@@ -25,6 +25,7 @@ const SignIn = () => {
     setIsLoading(true);
 
     try {
+      console.log('Attempting login with:', formData);
       const user = await login(formData.email, formData.password);
       // Redirect based on user type
       if (user.isAdmin) {
@@ -33,6 +34,7 @@ const SignIn = () => {
         navigate('/user'); // Redirect regular users to user page
       }
     } catch (error) {
+      console.error('Login error:', error);
       setError('Invalid email or password');
     } finally {
       setIsLoading(false);

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
 import { config } from '../config';
+import bcryptjs from 'bcryptjs';
 
 export class AuthController {
   // Register new user
@@ -54,24 +55,22 @@ export class AuthController {
   public async login(req: Request, res: Response): Promise<void> {
     try {
       const { email, password } = req.body;
-
-      // Find user
-      const user = await User.findOne({ email });
+      
+      const user = await User.findOne({ email, password });
+      console.log('Login attempt for email:', email);
+      
       if (!user) {
+        console.log('User not found or invalid password');
         res.status(401).json({ error: 'Invalid credentials' });
         return;
       }
 
-      // Check password
-      const isMatch = await user.comparePassword(password);
-      if (!isMatch) {
-        res.status(401).json({ error: 'Invalid credentials' });
-        return;
-      }
-
-      // Generate JWT token
       const token = jwt.sign(
-        { id: user._id, email: user.email },
+        { 
+          id: user._id, 
+          email: user.email,
+          isAdmin: user.isAdmin 
+        },
         config.jwtSecret,
         { expiresIn: '24h' }
       );
@@ -82,11 +81,13 @@ export class AuthController {
           id: user._id,
           email: user.email,
           firstName: user.firstName,
-          lastName: user.lastName
+          lastName: user.lastName,
+          isAdmin: user.isAdmin
         }
       });
     } catch (error) {
-      res.status(500).json({ error: 'Error logging in' });
+      console.error('Login error details:', error);
+      res.status(500).json({ error: 'Server error' });
     }
   }
 

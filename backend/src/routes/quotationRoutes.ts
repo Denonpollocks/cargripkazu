@@ -6,8 +6,15 @@ import { upload } from '../middleware/multerMiddleware';
 const router = Router();
 const quotationController = new QuotationController();
 
-// Apply auth middleware to all routes
-router.use(authMiddleware);
+// Public routes (no auth required)
+router.post(
+  '/guest-quotations', 
+  upload.single('part_image'), 
+  quotationController.createGuestQuotation // You'll need to create this method
+);
+
+// Protected routes (auth required)
+router.use(authMiddleware); // Apply auth middleware only to routes below this line
 
 // Quotation routes
 router.post(

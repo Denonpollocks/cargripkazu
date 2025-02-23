@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { config } from '../config';
+import { verifyToken } from '../utils/auth';
 
 // Extend Express Request type to include user
 declare global {
@@ -23,18 +22,14 @@ export const authMiddleware = async (
     const token = req.headers.authorization?.split(' ')[1];
 
     if (!token) {
-      res.status(401).json({ error: 'Authentication required' });
+      res.status(401).json({ error: 'No token provided' });
       return;
     }
 
-    const decoded = jwt.verify(token, config.jwtSecret) as {
-      id: string;
-      email: string;
-    };
-
+    const decoded = verifyToken(token);
     req.user = decoded;
     next();
   } catch (error) {
-    res.status(401).json({ error: 'Invalid token' });
+    res.status(401).json({ error: 'Invalid or expired token' });
   }
 }; 

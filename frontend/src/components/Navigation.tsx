@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext.tsx';
 const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const scrollToSection = (sectionId: string) => {
     if (location.pathname !== '/') {
@@ -22,6 +22,12 @@ const Navigation = () => {
     if (location.pathname === '/') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    // Redirect to home page after logout
+    window.location.href = '/';
   };
 
   const navigation = [
@@ -60,14 +66,25 @@ const Navigation = () => {
               ))}
               <button onClick={() => scrollToSection('vehicles')} className="text-gold-400 hover:text-gold-300">Vehicles</button>
               <button onClick={() => scrollToSection('parts')} className="text-gold-400 hover:text-gold-300">Parts</button>
-              <Link to="/signin" className="text-gold-400 hover:text-gold-300">Sign In</Link>
-              {user?.isAdmin && (
-                <Link 
-                  to="/admin"
-                  className="text-gold-400 hover:text-gold-300"
-                >
-                  Admin Panel
-                </Link>
+              {user ? (
+                <>
+                  {user.isAdmin && (
+                    <Link 
+                      to="/admin"
+                      className="text-gold-400 hover:text-gold-300"
+                    >
+                      Admin Panel
+                    </Link>
+                  )}
+                  <button 
+                    onClick={handleLogout}
+                    className="text-gold-400 hover:text-gold-300"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <Link to="/signin" className="text-gold-400 hover:text-gold-300">Sign In</Link>
               )}
             </div>
           </div>

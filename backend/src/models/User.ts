@@ -1,5 +1,4 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import bcrypt from 'bcryptjs';
 
 export interface IUser extends Document {
   email: string;
@@ -12,7 +11,6 @@ export interface IUser extends Document {
   isAdmin: boolean;
   createdAt: Date;
   updatedAt: Date;
-  comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
 const UserSchema: Schema = new Schema({
@@ -67,30 +65,7 @@ const UserSchema: Schema = new Schema({
   timestamps: true
 });
 
-// Hash password before saving
-UserSchema.pre('save', async function(next) {
-  try {
-    // Only hash the password if it has been modified (or is new)
-    if (!this.isModified('password')) return next();
-    
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password as string, salt);
-    next();
-  } catch (error) {
-    next(error as Error);
-  }
-});
-
-// Method to compare passwords
-UserSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
-  try {
-    return await bcrypt.compare(candidatePassword, this.password);
-  } catch (error) {
-    throw new Error('Error comparing passwords');
-  }
-};
-
-// Add error handling for unique email constraint
+// Only keep the email uniqueness error handling
 UserSchema.post('save', function(error: any, doc: any, next: any) {
   if (error.name === 'MongoError' && error.code === 11000) {
     next(new Error('Email address already exists'));

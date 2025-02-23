@@ -20,6 +20,7 @@ import AdminPanel from './components/admin/AdminPanel';
 import AdminRoute from './components/routes/AdminRoute';
 import AdminLogin from './components/admin/AdminLogin';
 import { AuthProvider } from './contexts/AuthContext';
+import Privacy from './components/Privacy';
 
 // HomePage component - Contains all sections for the main page
 function HomePage({ isQuotationFormOpen, setIsQuotationFormOpen }: { 
@@ -112,6 +113,7 @@ function App() {
                   </AdminRoute>
                 }
               />
+              <Route path="/privacy" element={<Privacy />} />
             </Routes>
           </div>
         </ScrollToTop>

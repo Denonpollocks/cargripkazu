@@ -36,23 +36,18 @@ router.post('/signup', asyncHandler(async (req: express.Request, res: express.Re
     throw new Error('User already exists');
   }
 
-  // Hash password
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(password, salt);
-
-  // Create user
+  // Create user with plain password
   const user = await User.create({
     firstName,
     lastName,
     email,
-    password: hashedPassword,
+    password, // Store password as-is
     phone,
     country,
     company
   });
 
   if (user) {
-    // Create token
     const token = jwt.sign(
       { userId: user._id },
       process.env.JWT_SECRET!,

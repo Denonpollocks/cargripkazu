@@ -31,24 +31,6 @@ const AdminLogin: React.FC = () => {
     }
   };
 
-  // Auto-login for development
-  React.useEffect(() => {
-    // Simulate successful admin login
-    const mockUser = {
-      id: 'dev-admin',
-      email: 'admin@car-grip.com',
-      firstName: 'Admin',
-      lastName: 'User',
-      isAdmin: true
-    };
-    
-    // Set the mock user in auth context
-    login('admin@car-grip.com', 'admin123')
-      .then(() => {
-        navigate('/admin');
-      });
-  }, []);
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-black">
       <div className="max-w-md w-full space-y-8 p-8 bg-zinc-900 rounded-lg">

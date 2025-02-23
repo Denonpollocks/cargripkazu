@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 import 'react-quill/dist/quill.snow.css';
+import { jwtDecode } from 'jwt-decode';
 
 interface User {
   id: string;
@@ -19,49 +20,49 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const decoded = jwtDecode<User>(token);
+        return decoded;
+      } catch {
+        localStorage.removeItem('token');
+        return null;
+      }
+    }
+    return null;
+  });
   const [isLoading, setIsLoading] = useState(false);
 
-  const login = async (email: string, password: string, isAdminLogin = false): Promise<User> => {
-    setIsLoading(true);
+  const login = async (email: string, password: string): Promise<User> => {
     try {
-      // Mock admin login
-      if (email === 'admin@car-grip.com' && password === 'admin123') {
-        const mockAdminUser = {
-          id: 'dev-admin',
-          email: 'admin@car-grip.com',
-          firstName: 'Admin',
-          lastName: 'User',
-          isAdmin: true
-        };
-        setUser(mockAdminUser);
-        return mockAdminUser;
+      setIsLoading(true);
+      const response = await fetch('http://localhost:3000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!response.ok) {
+        throw new Error('Invalid credentials');
       }
 
-      // Mock regular user login
-      if (email === 'user@example.com' && password === 'user123') {
-        const mockUser = {
-          id: 'dev-user',
-          email: 'user@example.com',
-          firstName: 'John',
-          lastName: 'Doe',
-          isAdmin: false
-        };
-        setUser(mockUser);
-        return mockUser;
-      }
-
-      // If credentials don't match any mock users, throw error
-      throw new Error('Invalid credentials');
-
+      const data = await response.json();
+      localStorage.setItem('token', data.token);
+      setUser(data.user);
+      return data.user;
+    } catch (error) {
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
   const logout = () => {
+    localStorage.removeItem('token');
     setUser(null);
-    // Add any additional logout logic here
   };
 
   return (

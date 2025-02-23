@@ -7,77 +7,65 @@ import User from '../models/User';
 
 export class QuotationController {
   // Create new quotation
-  public async createQuotation(req: Request, res: Response): Promise<void> {
+  public createQuotation = async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        res.status(401).json({ error: 'User ID not found' });
+        res.status(401).json({ 
+          success: false,
+          message: 'User ID not found' 
+        });
         return;
       }
 
       const { type, details } = req.body;
-      let imageUrl;
+      let parsedDetails;
+      
+      try {
+        parsedDetails = typeof details === 'string' ? JSON.parse(details) : details;
+      } catch (error) {
+        res.status(400).json({
+          success: false,
+          message: 'Invalid details format'
+        });
+        return;
+      }
 
       // Handle part image upload if present
       if (type === 'parts' && req.file) {
-        imageUrl = await uploadToS3(req.file);
-        details.part_image = imageUrl;
+        try {
+          const imageUrl = await uploadToS3(req.file);
+          parsedDetails.part_image = imageUrl;
+        } catch (uploadError) {
+          console.error('S3 upload error:', uploadError);
+          res.status(500).json({
+            success: false,
+            message: 'Error uploading image'
+          });
+          return;
+        }
       }
 
-      // Create quotation
-      const quotation = new Quotation({
+      const quotation = await Quotation.create({
         userId,
         type,
-        details,
+        details: parsedDetails,
         status: 'pending',
         dateSubmitted: new Date()
       });
 
-      await quotation.save();
-
-      // Get user details for email notifications
-      const user = await User.findById(userId);
-      if (!user) {
-        throw new Error('User not found');
-      }
-
-      // Send email notification to admin
-      await emailService.sendEmail(
-        'admin@car-grip.com',
-        'New Quotation Request',
-        'quotation-notification',
-        {
-          userName: `${user.firstName} ${user.lastName}`,
-          userEmail: user.email,
-          quotationId: quotation._id?.toString(),
-          quotationType: type,
-          details: details
-        }
-      );
-
-      // Send confirmation email to user
-      await emailService.sendEmail(
-        user.email,
-        'Quotation Request Received',
-        'quotation-confirmation',
-        {
-          userName: user.firstName,
-          quotationId: quotation._id?.toString(),
-          type: type,
-          details: details
-        }
-      );
-
-      // Return the created quotation
-      const populatedQuotation = await Quotation.findById(quotation._id)
-        .populate('userId', 'firstName lastName email');
-
-      res.status(201).json(populatedQuotation);
+      res.status(201).json({
+        success: true,
+        data: quotation
+      });
     } catch (error) {
       console.error('Error creating quotation:', error);
-      res.status(500).json({ error: 'Error creating quotation' });
+      res.status(500).json({
+        success: false,
+        message: error instanceof Error ? error.message : 'Error creating quotation'
+      });
     }
-  }
+  };
 
   // Get user's quotations
   public async getUserQuotations(req: Request, res: Response): Promise<void> {
@@ -257,4 +245,28 @@ export class QuotationController {
       res.status(500).json({ error: 'Error fetching quotation statistics' });
     }
   }
+
+  public createGuestQuotation = async (req: Request, res: Response) => {
+    try {
+      const quotationData = {
+        ...req.body,
+        image: req.file?.filename,
+        isGuest: true
+      };
+
+      const quotation = await Quotation.create(quotationData);
+      
+      res.status(201).json({
+        success: true,
+        data: quotation
+      });
+    } catch (error: any) {
+      console.error('Error creating guest quotation:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error creating guest quotation',
+        error: error.message
+      });
+    }
+  };
 } 

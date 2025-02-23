@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import QuotationResponseModal from './QuotationResponseModal';
+import { Quotation as QuotationType, VehicleDetails, PartsDetails } from '../../types/interfaces';
+
+interface Quotation extends Omit<QuotationType, 'details'> {
+  details: VehicleDetails | PartsDetails;
+}
 
 const QuotationManagement: React.FC = () => {
-  const [quotations, setQuotations] = useState([]);
-  const [selectedQuotation, setSelectedQuotation] = useState(null);
+  const [quotations, setQuotations] = useState<Quotation[]>([]);
+  const [selectedQuotation, setSelectedQuotation] = useState<Quotation | null>(null);
   const [isResponseModalOpen, setIsResponseModalOpen] = useState(false);
 
   useEffect(() => {
@@ -12,7 +17,19 @@ const QuotationManagement: React.FC = () => {
 
   const fetchQuotations = async () => {
     try {
-      const response = await fetch('/api/admin/quotations');
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3000/api/admin/quotations', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
       setQuotations(data);
     } catch (error) {
@@ -20,20 +37,25 @@ const QuotationManagement: React.FC = () => {
     }
   };
 
-  const handleRespond = async (response: any) => {
+  const handleRespond = async (response) => {
+    if (!selectedQuotation) return;
     try {
-      const res = await fetch(`/api/admin/quotations/${selectedQuotation._id}/response`, {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:3000/api/admin/quotations/${selectedQuotation.id}/response`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(response),
+        body: JSON.stringify(response)
       });
 
-      if (res.ok) {
-        setIsResponseModalOpen(false);
-        fetchQuotations(); // Refresh quotations list
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
       }
+
+      setIsResponseModalOpen(false);
+      fetchQuotations(); // Refresh quotations list
     } catch (error) {
       console.error('Error responding to quotation:', error);
     }
@@ -44,7 +66,7 @@ const QuotationManagement: React.FC = () => {
       <h2 className="text-2xl font-bold text-gold-500 mb-6">Quotation Management</h2>
       
       {quotations.map((quotation) => (
-        <div key={quotation._id} className="bg-black p-6 rounded-lg border border-gold-500">
+        <div key={quotation.id} className="bg-black p-6 rounded-lg border border-gold-500">
           <div className="flex justify-between items-start mb-4">
             <div>
               <h3 className="text-xl font-bold text-gold-500">

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import emailjs from '@emailjs/browser';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 // Props interface for the QuotationForm component
 interface QuotationFormProps {
@@ -8,7 +8,10 @@ interface QuotationFormProps {
   onClose: () => void;  // Function to close the modal
 }
 
+const API_BASE_URL = 'http://localhost:3000'; // or whatever your backend URL is
+
 const QuotationForm = ({ isOpen, onClose }: QuotationFormProps) => {
+  const { user } = useAuth();
   // State for managing form type and data
   const [inquiryType, setInquiryType] = useState<'vehicle' | 'parts'>('vehicle');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -24,6 +27,17 @@ const QuotationForm = ({ isOpen, onClose }: QuotationFormProps) => {
   // Hook for programmatic navigation
   const navigate = useNavigate();
 
+  // Add this after your existing useState declarations
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        ...formData,
+        name: `${user.firstName} ${user.lastName}`,
+        email: user.email,
+      });
+    }
+  }, [user]);
+
   // Handle image file selection
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -36,25 +50,106 @@ const QuotationForm = ({ isOpen, onClose }: QuotationFormProps) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Collect all form data
-    const formDataObj = new FormData(e.currentTarget);
-    const templateParams = {
-      inquiry_type: inquiryType,
-      ...Object.fromEntries(formDataObj.entries()),
-      image_name: selectedImage?.name || 'No image uploaded'
-    };
-    
-    // Show authentication options after form submission
-    setShowAuthPrompt(true);
-    setIsSubmitting(false);
+    try {
+      const formDataObj = new FormData();
+      
+      // Add all form fields
+      formDataObj.append('type', inquiryType);
+      formDataObj.append('details', JSON.stringify({
+        // Vehicle/Parts basic details
+        make_model: e.currentTarget.make_model.value,
+        model: e.currentTarget.model.value,
+        year: e.currentTarget.year.value,
+        
+        // Preferences (for vehicle)
+        ...(inquiryType === 'vehicle' && {
+          mileage: e.currentTarget.mileage.value,
+          grade: e.currentTarget.grade.value,
+          color: e.currentTarget.color.value,
+          budget: e.currentTarget.budget.value,
+        }),
+        
+        // Parts specific details
+        ...(inquiryType === 'parts' && {
+          chassis_number: e.currentTarget.chassis_number?.value,
+          part_number: e.currentTarget.part_number?.value,
+          parts_description: e.currentTarget.parts_description?.value,
+        }),
+        
+        // Destination information
+        country: e.currentTarget.country.value,
+        port: e.currentTarget.port.value,
+        
+        // Contact information
+        contactName: formData.name,
+        contactEmail: formData.email,
+        contactPhone: formData.phone,
+        message: formData.message
+      }));
+
+      if (selectedImage) {
+        formDataObj.append('part_image', selectedImage);
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/quotations`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: formDataObj
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to submit quotation');
+      }
+
+      alert('Quotation submitted successfully!');
+      onClose();
+    } catch (error) {
+      console.error('Error submitting quotation:', error);
+      alert(error instanceof Error ? error.message : 'Error submitting quotation');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Handle guest submission flow
-  const handleGuestSubmission = () => {
-    console.log('Guest submission:', formData);
-    alert('Thank you! We will contact you via email shortly.');
-    onClose();
-    setShowAuthPrompt(false);
+  const handleGuestSubmission = async () => {
+    try {
+      const formDataObj = new FormData();
+      
+      // Append all form data
+      if (selectedImage) {
+        formDataObj.append('part_image', selectedImage);
+      }
+      
+      Object.entries(formData).forEach(([key, value]) => {
+        formDataObj.append(key, value);
+      });
+      
+      formDataObj.append('inquiryType', inquiryType);
+      formDataObj.append('status', 'pending');
+      formDataObj.append('createdAt', new Date().toISOString());
+
+      const response = await fetch(`${API_BASE_URL}/api/guest-quotations`, {
+        method: 'POST',
+        body: formDataObj
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to submit guest quotation');
+      }
+
+      alert('Thank you! We will contact you via email shortly.');
+      onClose();
+      setShowAuthPrompt(false);
+    } catch (error) {
+      console.error('Error submitting guest quotation:', error);
+      alert('Error submitting quotation. Please try again.');
+    }
   };
 
   // Handle signup flow with quotation data
@@ -74,6 +169,22 @@ const QuotationForm = ({ isOpen, onClose }: QuotationFormProps) => {
     });
   };
 
+
+  const handleSignIn = () => {
+    // Prepare quotation data for signup process
+    const quotationData = {
+      inquiryType,
+      ...formData,
+    };
+    
+    // Navigate to signup page with quotation data
+    navigate('/SignIn', { 
+      state: { 
+        fromQuotation: true,
+        quotationData 
+      }
+    });
+  };
   // Don't render anything if modal is closed
   if (!isOpen) return null;
 
@@ -109,12 +220,22 @@ const QuotationForm = ({ isOpen, onClose }: QuotationFormProps) => {
                 >
                   Continue as Guest
                 </button>
+
+                <button
+                  onClick={handleSignIn}
+                  className="w-full p-3 bg-gold-500 text-black rounded hover:bg-gold-400"
+                >
+                  Aldready a Member? Sign in
+                </button>
+
                 <button
                   onClick={() => setShowAuthPrompt(false)}
                   className="w-full p-3 text-gold-500 hover:text-gold-400"
                 >
                   Back
                 </button>
+
+                
               </div>
             </div>
           ) : (
